@@ -13,13 +13,6 @@ data class Venue(
     @ColumnInfo(name = IMAGE) val image: String,
     @ColumnInfo(name = FAVORITE) var isFavorite: Boolean
 ) {
-    companion object {
-        private const val ID = "_id"
-        private const val NAME = "name"
-        private const val DESCRIPTION = "description"
-        private const val IMAGE = "image"
-        private const val FAVORITE = "favorite"
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -34,5 +27,13 @@ data class Venue(
 
     override fun hashCode(): Int {
         return uuid.hashCode()
+    }
+
+    companion object {
+        private const val ID = "_id"
+        private const val NAME = "name"
+        private const val DESCRIPTION = "description"
+        private const val IMAGE = "image"
+        private const val FAVORITE = "favorite"
     }
 }
