@@ -12,6 +12,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.EmptyLogger
 import org.koin.core.logger.Level
 
+
 class HelsinkiWalkerApplication : Application() {
 
     override fun onCreate() {
