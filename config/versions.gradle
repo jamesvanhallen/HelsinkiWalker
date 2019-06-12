@@ -12,4 +12,5 @@ ext {
     retrofitVersion = '2.6.0'
     gsonVersion = '2.8.0'
     okhttpVersion = '3.9.1'
+    androidxtestingversion = '1.2.0'
 }

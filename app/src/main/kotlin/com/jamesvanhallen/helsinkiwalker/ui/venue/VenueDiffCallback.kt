@@ -6,7 +6,7 @@ import com.jamesvanhallen.helsinkiwalker.model.database.venue.Venue
 class VenueDiffCallback(var newPersons: List<Venue>, var oldPersons: List<Venue>) :
     DiffUtil.Callback() {
 
-    override fun getOldListSize() =  oldPersons.size
+    override fun getOldListSize() = oldPersons.size
 
     override fun getNewListSize() = newPersons.size
 

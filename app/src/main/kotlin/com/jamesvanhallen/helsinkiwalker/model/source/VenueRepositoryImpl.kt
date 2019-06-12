@@ -11,8 +11,8 @@ class VenueRepositoryImpl(
 
     override suspend fun getAllVenues(lat: Double, lon: Double): List<Venue> {
         val venueResponse = venueDataSource.getAllVenues(lat, lon)
-        return if (venueResponse.results.size > 15) {
-            venueResponse.results.subList(0, 14)
+        return if (venueResponse.results.size > VENUES_LIMIT) {
+            venueResponse.results.subList(0, VENUES_LIMIT - 1)
         } else {
             venueResponse.results
         }
@@ -38,5 +38,9 @@ class VenueRepositoryImpl(
             Pair(60.169012, 24.930341),
             Pair(60.170085, 24.929569)
         )
+    }
+
+    companion object {
+        const val VENUES_LIMIT = 15
     }
 }

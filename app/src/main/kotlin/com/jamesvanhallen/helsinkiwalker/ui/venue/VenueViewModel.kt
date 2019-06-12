@@ -7,7 +7,7 @@ import com.jamesvanhallen.helsinkiwalker.model.database.venue.Venue
 import com.jamesvanhallen.helsinkiwalker.model.source.VenueRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Timer
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.fixedRateTimer
 
