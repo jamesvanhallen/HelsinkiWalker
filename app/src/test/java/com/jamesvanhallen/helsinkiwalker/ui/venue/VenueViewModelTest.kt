@@ -1,19 +1,19 @@
 package com.jamesvanhallen.helsinkiwalker.ui.venue
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.MutableLiveData
-import com.google.common.truth.Truth
+import androidx.lifecycle.Observer
 import com.jamesvanhallen.helsinkiwalker.CoroutinesTestRule
-import com.jamesvanhallen.helsinkiwalker.model.database.movie.Movie
+import com.jamesvanhallen.helsinkiwalker.model.database.venue.Venue
 import com.jamesvanhallen.helsinkiwalker.model.source.VenueRepository
-import com.jamesvanhallen.helsinkiwalker.testObserver
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
+import org.junit.runner.RunWith
+import org.mockito.Mockito.*
 import org.mockito.junit.MockitoJUnit
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class VenueViewModelTest {
 
     @get:Rule
@@ -25,34 +25,68 @@ class VenueViewModelTest {
     @get:Rule
     var coroutinesTestRule = CoroutinesTestRule()
 
-    @Mock
-    lateinit var venueRepository: VenueRepository
-
     @Test
     fun `Emit empty data`() = coroutinesTestRule.testDispatcher.runBlockingTest {
-        `when`(venueRepository.allVenues).thenReturn(MutableLiveData<List<Movie>>())
+        val venueRepository = mock(VenueRepository::class.java)
+        `when`(venueRepository.getAllVenues(anyDouble(), anyDouble())).thenReturn(emptyList())
+        `when`(venueRepository.provideLocations()).thenReturn(listOf(Pair(0.5, 0.3)))
+        `when`(venueRepository.getCachedVenues()).thenReturn(emptyList())
         val viewModel = VenueViewModel(venueRepository)
-        val testObserver = viewModel.movies.testObserver()
+        val observer = mock(Observer::class.java) as Observer<List<Venue>>
+        viewModel.venues.observeForever(observer)
 
-        Truth.assert_()
-            .that(testObserver.observedValues)
-            .isEqualTo(emptyList<Movie>())
+        viewModel.fetchVenues(0)
+
+        verify(observer).onChanged(emptyList())
     }
 
     @Test
-    fun `Emit list of to items`() = coroutinesTestRule.testDispatcher.runBlockingTest {
-        val movieLiveData = MutableLiveData<List<Movie>>()
-        `when`(venueRepository.allVenues).thenReturn(movieLiveData)
-        val viewModel = VenueViewModel(venueRepository)
-        val testObserver = viewModel.movies.testObserver()
+    fun `Emit list of two items`() = coroutinesTestRule.testDispatcher.runBlockingTest {
         val testData = listOf(
-            Movie(1, "test1", 0.5f, ""),
-            Movie(2, "test2", 1f, "")
+            Venue("1", "test1", "", "", false),
+            Venue("2", "test2", "", "", false)
         )
-        movieLiveData.postValue(testData)
+        val venueRepository = mock(VenueRepository::class.java)
+        `when`(venueRepository.getAllVenues(anyDouble(), anyDouble())).thenReturn(testData)
+        `when`(venueRepository.provideLocations()).thenReturn(listOf(Pair(0.0, 0.6)))
+        `when`(venueRepository.getCachedVenues()).thenReturn(emptyList())
+        val viewModel = VenueViewModel(venueRepository)
+        val observer = mock(Observer::class.java) as Observer<List<Venue>>
+        viewModel.venues.observeForever(observer)
 
-        Truth.assert_()
-            .that(testObserver.observedValues)
-            .isEqualTo(listOf(testData))
+        viewModel.fetchVenues(0)
+
+        verify(observer).onChanged(testData)
+    }
+
+    @Test
+    fun `Test on error`() = coroutinesTestRule.testDispatcher.runBlockingTest {
+        val venueRepository = mock(VenueRepository::class.java)
+        `when`(venueRepository.getAllVenues(anyDouble(), anyDouble())).thenReturn(listOf())
+        `when`(venueRepository.provideLocations()).thenReturn(listOf(Pair(0.0, 0.6)))
+        `when`(venueRepository.getCachedVenues()).thenReturn(emptyList())
+        val viewModel = VenueViewModel(venueRepository)
+        val observer = mock(Observer::class.java) as Observer<Throwable?>
+        viewModel.error.observeForever(observer)
+
+        viewModel.fetchVenues(6)
+
+        verify(observer).onChanged(any<IndexOutOfBoundsException>())
+    }
+
+    @Test
+    fun `Test favorite`() = coroutinesTestRule.testDispatcher.runBlockingTest {
+        val venueRepository = mock(VenueRepository::class.java)
+        val viewModel = VenueViewModel(venueRepository)
+
+        val venue = Venue("1", "test1", "", "", true)
+        viewModel.onFavoriteSelected(venue)
+
+        verify(venueRepository).saveFavorite(venue)
+
+        venue.isFavorite = false
+        viewModel.onFavoriteSelected(venue)
+
+        verify(venueRepository).removeFavorite(venue)
     }
 }

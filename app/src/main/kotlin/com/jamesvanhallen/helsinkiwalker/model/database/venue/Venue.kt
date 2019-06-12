@@ -1,18 +1,38 @@
 package com.jamesvanhallen.helsinkiwalker.model.database.venue
 
-import com.google.gson.annotations.SerializedName
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.jamesvanhallen.helsinkiwalker.model.database.VenueDataBase.Companion.VENUES_TABLE_NAME
 
+@Entity(tableName = VENUES_TABLE_NAME)
 data class Venue(
-    val id: Long,
-    @SerializedName(NAME) val name: Long,
-    @SerializedName(DESCRIPTION) val description: Long,
-    @SerializedName(IMAGE) val image: Long
-
+    @PrimaryKey @ColumnInfo(name = ID) val uuid: String,
+    @ColumnInfo(name = NAME) val name: String,
+    @ColumnInfo(name = DESCRIPTION) val description: String,
+    @ColumnInfo(name = IMAGE) val image: String,
+    @ColumnInfo(name = FAVORITE) var isFavorite: Boolean
 ) {
     companion object {
-        const val ID = "'/$'/oid"
+        private const val ID = "_id"
         private const val NAME = "name"
-        private const val DESCRIPTION = "short_description"
-        private const val IMAGE = "listimage"
+        private const val DESCRIPTION = "description"
+        private const val IMAGE = "image"
+        private const val FAVORITE = "favorite"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Venue
+
+        if (uuid != other.uuid) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return uuid.hashCode()
     }
 }

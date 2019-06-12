@@ -1,50 +1,68 @@
 package com.jamesvanhallen.helsinkiwalker.ui.venue
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jamesvanhallen.helsinkiwalker.model.database.movie.Movie
 import com.jamesvanhallen.helsinkiwalker.model.database.venue.Venue
 import com.jamesvanhallen.helsinkiwalker.model.source.VenueRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import retrofit2.await
+import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.fixedRateTimer
 
 class VenueViewModel(
     private val venueRepository: VenueRepository
 ) : ViewModel() {
 
-    val movies = MutableLiveData<List<Venue>>()
+    val venues = MutableLiveData<List<Venue>>()
+    val error = MutableLiveData<Throwable?>()
+    val loading = MutableLiveData<Boolean>()
 
-    init {
-        onCreate()
+    private var attempt: AtomicInteger = AtomicInteger(0)
+    var timer: Timer? = null
+
+    fun init() {
+        timer = fixedRateTimer(TIMER, false, 0, TIMER_PERIOD) {
+            fetchVenues(attempt.get())
+            val incrementAndGet = attempt.incrementAndGet()
+            if (incrementAndGet == venueRepository.provideLocations().size) {
+                attempt = AtomicInteger(0)
+            }
+        }
     }
 
-    private fun onCreate() = viewModelScope.launch(Dispatchers.IO) {
-        val venues = venueRepository.getAllVenues(60.170187, 24.930599)
-        Log.d("AAA", "venues " + venues.size)
-       // withContext(Dispatchers.Main) {
-//            try {
-//                if (venues.isSuccessful) {
-//                    //Do something with response e.g show to the UI.
-//                } else {
-//                    toast("Error: ${response.code()}")
-//                }
-//            } catch (e: HttpException) {
-//                toast("Exception ${e.message}")
-//            } catch (e: Throwable) {
-//                toast("Ooops: Something else went wrong")
-//            }
-        //}
-
+    fun fetchVenues(locationNumber: Int) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            val (lat, lan) = venueRepository.provideLocations()[locationNumber]
+            error.postValue(null)
+            loading.postValue(true)
+            val allVenues = venueRepository.getAllVenues(lat, lan)
+            val cachedVenues = venueRepository.getCachedVenues()
+            cachedVenues.forEach { venue -> allVenues.find { venue == it }?.isFavorite = true }
+            venues.postValue(allVenues)
+        } catch (throwable: Throwable) {
+            error.postValue(throwable)
+        } finally {
+            loading.postValue(false)
+        }
     }
 
-//    companion object {
-//        private const val ONE_SECOND = 1000
-//        private const val MAX_RANDOM_DELAY = 10000L
-//        private const val MIN_RANDOM_DELAY = 3000L
-//        private const val MAX_RATIO = 5
-//    }
+    fun onFavoriteSelected(venue: Venue) = viewModelScope.launch(Dispatchers.IO) {
+        if (venue.isFavorite) {
+            venueRepository.saveFavorite(venue)
+        } else {
+            venueRepository.removeFavorite(venue)
+        }
+    }
+
+    override fun onCleared() {
+        timer?.cancel()
+        super.onCleared()
+    }
+
+    companion object {
+        const val TIMER = "timer"
+        const val TIMER_PERIOD = 10000L
+    }
 }
