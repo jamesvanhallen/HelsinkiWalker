@@ -1,12 +1,15 @@
 package com.jamesvanhallen.helsinkiwalker.di
 
-import com.jamesvanhallen.helsinkiwalker.model.database.VenueDataBase
-import com.jamesvanhallen.helsinkiwalker.model.source.VenueRepository
-import com.jamesvanhallen.helsinkiwalker.model.source.VenueRepositoryImpl
+import com.jamesvanhallen.helsinkiwalker.domain.database.AppDataBase
+import com.jamesvanhallen.helsinkiwalker.domain.source.repository.VenueRepository
+import com.jamesvanhallen.helsinkiwalker.domain.source.repository.VenueRepositoryImpl
 import org.koin.dsl.module
 
 val repositoryModule = module {
     single {
-        VenueRepositoryImpl(get(), get<VenueDataBase>().movieDao) as VenueRepository
+        VenueRepositoryImpl(
+            get(),
+            get<AppDataBase>().venueDao
+        ) as VenueRepository
     }
 }

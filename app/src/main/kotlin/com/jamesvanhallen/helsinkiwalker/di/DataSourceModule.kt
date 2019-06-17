@@ -4,8 +4,8 @@ import com.google.gson.GsonBuilder
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.jamesvanhallen.helsinkiwalker.BuildConfig
 import com.jamesvanhallen.helsinkiwalker.api.VenueDataSource
-import com.jamesvanhallen.helsinkiwalker.model.database.venue.Venue
-import com.jamesvanhallen.helsinkiwalker.model.source.response.VenueDeserializer
+import com.jamesvanhallen.helsinkiwalker.domain.source.model.VenueDto
+import com.jamesvanhallen.helsinkiwalker.domain.source.response.VenueDeserializer
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
@@ -23,7 +23,7 @@ val dataSourceModule = module {
 
     single {
         GsonBuilder()
-            .registerTypeAdapter(Venue::class.java, VenueDeserializer())
+            .registerTypeAdapter(VenueDto::class.java, VenueDeserializer())
             .create()
     }
 

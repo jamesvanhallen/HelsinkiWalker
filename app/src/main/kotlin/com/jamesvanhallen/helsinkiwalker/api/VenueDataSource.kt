@@ -1,6 +1,6 @@
 package com.jamesvanhallen.helsinkiwalker.api
 
-import com.jamesvanhallen.helsinkiwalker.model.source.response.VenueResponse
+import com.jamesvanhallen.helsinkiwalker.domain.source.response.VenueResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
