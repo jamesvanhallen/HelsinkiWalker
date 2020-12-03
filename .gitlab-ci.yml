@@ -1,0 +1,31 @@
+stages:
+  - build
+  - test
+
+lintDebug:
+  stage: build
+  script:
+    - ./gradlew -Pci --console=plain :app:lintDebug -PbuildDir=lint
+
+assembleDebug:
+  stage: build
+  script:
+    - ./gradlew assembleDebug
+  artifacts:
+    paths:
+      - app/build/outputs/
+
+testDebugUnitTest:
+  stage: test
+  script:
+    - ./gradlew -Pci --console=plain :app:testDebugUnitTest
+
+detektCheck:
+  stage: test
+  script:
+    - ./gradlew -Pci --console=plain :app:detektCheck
+
+ktlint:
+  stage: test
+  script:
+    - ./gradlew -Pci --console=plain :app:ktlint
