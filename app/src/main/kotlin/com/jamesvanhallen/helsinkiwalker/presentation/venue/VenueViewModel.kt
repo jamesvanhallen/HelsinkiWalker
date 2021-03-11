@@ -6,10 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.jamesvanhallen.helsinkiwalker.domain.database.venue.VenueEntity
 import com.jamesvanhallen.helsinkiwalker.domain.source.repository.VenueRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Timer
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.fixedRateTimer
 
@@ -18,25 +17,19 @@ class VenueViewModel(
 ) : ViewModel() {
 
     val venues = MutableLiveData<List<Venue>>()
-    val error = MutableLiveData<Throwable?>()
+    val error = MutableLiveData<Throwable>()
     val loading = MutableLiveData<Boolean>()
 
     private var attempt: AtomicInteger = AtomicInteger(0)
     var timer: Timer? = null
-    var isCanceled = false
-    var cancellationJob: Job? = null
 
     fun init() {
-        cancellationJob?.cancel()
-        if (isCanceled) {
-            timer = fixedRateTimer(TIMER, false, 0, TIMER_PERIOD) {
-                fetchVenues(attempt.get())
-                val incrementAndGet = attempt.incrementAndGet()
-                if (incrementAndGet == venueRepository.provideLocations().size) {
-                    attempt = AtomicInteger(0)
-                }
+        timer = fixedRateTimer(TIMER, false, 0, TIMER_PERIOD) {
+            fetchVenues(attempt.get())
+            val incrementAndGet = attempt.incrementAndGet()
+            if (incrementAndGet == venueRepository.provideLocations().size) {
+                attempt = AtomicInteger(0)
             }
-            isCanceled = false
         }
     }
 
@@ -62,12 +55,9 @@ class VenueViewModel(
         }
     }
 
-    fun stopTimer() {
-        cancellationJob = viewModelScope.launch(Dispatchers.IO) {
-            delay(DELAY_PERIOD)
-            timer?.cancel()
-            isCanceled = true
-        }
+    fun stopTimer() = viewModelScope.launch(Dispatchers.IO) {
+        delay(DELAY_PERIOD)
+        timer?.cancel()
     }
 
     fun onFavoriteSelected(venue: Venue) = viewModelScope.launch(Dispatchers.IO) {
